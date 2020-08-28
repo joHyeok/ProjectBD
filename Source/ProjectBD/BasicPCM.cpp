@@ -3,6 +3,7 @@
 
 #include "BasicPCM.h"
 #include "BasicPlayer.h"
+#include "GameFramework/SpringArmComponent.h"
 
 ABasicPCM::ABasicPCM() {
 
@@ -28,5 +29,12 @@ void ABasicPCM::UpdateCamera(float DeltaTime)
 		// 두 값 사이를 원하는 시간동안 부드럽게 보간
 		float ResultFOV = FMath::FInterpTo(GetFOVAngle(), TargetFOV, DeltaTime, 20.0f);
 		SetFOV(ResultFOV);
+
+		FVector TargetPosition = Pawn->bIsCrouched ? Pawn->CrouchedSpringArmPosition : Pawn->NormalSpringArmPosition;
+
+		FVector ResultSpringArmPosition = FMath::VInterpTo(Pawn->SpringArm->GetRelativeLocation(), 
+			TargetPosition, DeltaTime, 15.0f);
+
+		Pawn->SpringArm->SetRelativeLocation(ResultSpringArmPosition);
 	}
 }

@@ -10,6 +10,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "WeaponComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
 ABasicPlayer::ABasicPlayer()
@@ -34,8 +35,12 @@ ABasicPlayer::ABasicPlayer()
 
 	SpringArm->SocketOffset = FVector(0, 40.0f, 88.0f);
 	SpringArm->TargetArmLength = 120.f;
+	SpringArm->bUsePawnControlRotation = true;
 
 	GetCharacterMovement()->CrouchedHalfHeight = GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
+
+	NormalSpringArmPosition = SpringArm->GetRelativeLocation();
+	CrouchedSpringArmPosition = NormalSpringArmPosition + FVector(0, 0, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() / 2);
 }
 
 // Called when the game starts or when spawned
@@ -137,11 +142,77 @@ void ABasicPlayer::CameraView(float AxisValue)
 void ABasicPlayer::StartFire()
 {
 	bIsFire = true;
+	OnFire();
 }
 
 void ABasicPlayer::StopFire()
 {
 	bIsFire = false;
+}
+
+void ABasicPlayer::OnFire()
+{
+	//발사가 아니면 return
+	if (!bIsFire) {
+		return;
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	int32 ScreenSizeX;
+	int32 ScreenSizeY;
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+
+	FVector CameraLocation;
+	FRotator CameraRotation;
+
+	//GetViewportSize : 플레이어가 가진 화면 사이즈
+	PC->GetViewportSize(ScreenSizeX, ScreenSizeY);
+
+	//카메라를 관리하는 플레이어 컨트롤러가 가지고 있다.
+	//ProjectWorldLocationToScreen : 월드좌표를 화면좌표계로 바꾼다.
+	//DeprojectScreenPositionToWorld : 화면 좌표계를 월드 좌표계로 바꾼다. 엔진의 기능임
+	//아래 코드는 화면의 가운데 지점을 월드좌표로 가져온거다. 화면의 가운데 즉 에임의 위치다.
+	PC->DeprojectScreenPositionToWorld(ScreenSizeX / 2, ScreenSizeY / 2, CrosshairWorldPosition, CrosshairWorldDirection);
+
+	//카메라 위치 가져오기
+	PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
+
+	//라인 트레이스 사용
+	FVector TraceStart = CameraLocation;
+	//끝점은 시작점에서 조준점방향으로 쭉 늘리는것
+	FVector TraceEnd = TraceStart + (CrosshairWorldDirection * 99999.f);
+
+	//프젝세팅에 트레이스 체널들의 배열값이다. 그 이넘값을 바이트 형태로 만든것
+	//충돌체크할 리스트를 만드는거다.
+	TArray <TEnumAsByte<EObjectTypeQuery>> Objects;
+
+	//손으로 하드코딩은 거의 안한다. UPROPERTY()로 빼서 캐릭터 블프에서 사용한다.
+	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
+	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
+	//값을 안넣어서 다 맞는걸로 함
+	TArray<AActor*> ActorToIgnore;
+
+	//맞은놈 정보 저장
+	//온갖 정보를 가지고 있다.
+	FHitResult OutHit;
+
+	//충돌하면 true를 반환함
+	//월드정보, 시작, 끝, 충돌할 리스트, 스테틱메시의 충돌확인을 false면 단순콜리전으로 할것이냐 true면 복합콜리전으로 할것이냐를 설정한다, 
+	//안맞을 애들, 그려진 타입, 맞은 놈 정보, 무시 사항에 폰을 뺄거냐?, 라인색, 맞은 후에 색, 나타날 시간
+	//마지막 3개는 보통 안쓴다 보일려면 쓴다
+	//카메라에서 쏘는 이유는 UI의 조준선이 화면 기준으로 되어 있기 때문에 에임을 맞춘다는게 카메라에서 조준섬으로 라인을 쏘는걸로 한다.
+	//맞는다면 총에서 라인을 쏴서 진짜 맞았는지 확인
+	bool Result = UKismetSystemLibrary::LineTraceSingleForObjects(
+		GetWorld(), TraceStart, TraceEnd, Objects, true, ActorToIgnore, EDrawDebugTrace::ForDuration, 
+		OutHit, true, FLinearColor::Red, FLinearColor::Green, 5.0f);
+
+	//충돌한다면
+	if (Result) {
+		UE_LOG(LogClass, Warning, TEXT("Hit %s"), *OutHit.GetActor()->GetName());
+	}
 }
 
 void ABasicPlayer::StartIronsight()

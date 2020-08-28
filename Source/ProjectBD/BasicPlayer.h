@@ -47,6 +47,8 @@ public:
 	void StartFire();
 	void StopFire();
 
+	void OnFire();
+
 	void StartIronsight();
 	void StopIronsight();
 
@@ -66,4 +68,13 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 		uint64 bIsIronsight : 1;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "SpringArm");
+		FVector NormalSpringArmPosition;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "SpringArm");
+		FVector CrouchedSpringArmPosition;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TArray <TEnumAsByte<EObjectTypeQuery>> TestObjects;
 };
