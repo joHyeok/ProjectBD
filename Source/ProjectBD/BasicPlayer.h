@@ -39,7 +39,6 @@ public:
 	void MoveRight(float AxisValue);
 	void LookUp(float AxisValue);
 	void Turn(float AxisValue);
-	void CameraView(float AxisValue);
 	
 	void Sprint();
 	void StopSprint();
@@ -53,6 +52,9 @@ public:
 	void StopIronsight();
 
 	void StartCrouch();
+
+	void CameraViewChange();
+	void StopCameraViewChange();
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 		float WalkSpeed = 300.0f;
@@ -77,4 +79,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray <TEnumAsByte<EObjectTypeQuery>> TestObjects;
+
+	bool IsCameraViewChange = false;
+	FRotator CameraChangeSaveRotator;
 };

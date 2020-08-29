@@ -15,7 +15,7 @@
 // Sets default values
 ABasicPlayer::ABasicPlayer()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -41,13 +41,15 @@ ABasicPlayer::ABasicPlayer()
 
 	NormalSpringArmPosition = SpringArm->GetRelativeLocation();
 	CrouchedSpringArmPosition = NormalSpringArmPosition + FVector(0, 0, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() / 2);
+
+	
 }
 
 // Called when the game starts or when spawned
 void ABasicPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 // Called every frame
@@ -67,8 +69,6 @@ void ABasicPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &ABasicPlayer::LookUp);
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &ABasicPlayer::Turn);
 
-	PlayerInputComponent->BindAxis(TEXT("CameraView"), this, &ABasicPlayer::CameraView);
-	
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &ABasicPlayer::Jump);
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &ABasicPlayer::StopJumping);
 
@@ -82,6 +82,9 @@ void ABasicPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction(TEXT("Ironsight"), IE_Released, this, &ABasicPlayer::StopIronsight);
 
 	PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Pressed, this, &ABasicPlayer::StartCrouch);
+
+	PlayerInputComponent->BindAction(TEXT("CameraView"), IE_Pressed, this, &ABasicPlayer::CameraViewChange);
+	PlayerInputComponent->BindAction(TEXT("CameraView"), IE_Released, this, &ABasicPlayer::StopCameraViewChange);
 }
 
 void ABasicPlayer::MoveForward(float AxisValue)
@@ -103,16 +106,28 @@ void ABasicPlayer::MoveForward(float AxisValue)
 	// 컨트롤러의 방향으로 이동한다.
 	FRotator YawBaseRotation = FRotator(0, GetControlRotation().Yaw, 0);
 
-	FVector CameraForward = UKismetMathLibrary::GetForwardVector(YawBaseRotation);
+	FVector ResultForward;
 
-	AddMovementInput(CameraForward, AxisValue);
+	if (!IsCameraViewChange)
+		ResultForward = UKismetMathLibrary::GetForwardVector(YawBaseRotation);
+	else
+		ResultForward = UKismetMathLibrary::GetForwardVector(GetActorRotation());
+
+	AddMovementInput(ResultForward, AxisValue);
 }
 
 void ABasicPlayer::MoveRight(float AxisValue)
 {
 	FRotator YawBaseRotation = FRotator(0, GetControlRotation().Yaw, 0);
-	FVector CameraRight = UKismetMathLibrary::GetRightVector(YawBaseRotation);
-	AddMovementInput(CameraRight, AxisValue);
+
+	FVector ResultForward;
+
+	if (!IsCameraViewChange)
+		ResultForward = UKismetMathLibrary::GetRightVector(YawBaseRotation);
+	else
+		ResultForward = UKismetMathLibrary::GetRightVector(GetActorRotation());
+
+	AddMovementInput(ResultForward, AxisValue);
 }
 
 void ABasicPlayer::LookUp(float AxisValue)
@@ -130,13 +145,9 @@ void ABasicPlayer::Sprint()
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 }
 
-void ABasicPlayer::StopSprint() {
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-}
-
-void ABasicPlayer::CameraView(float AxisValue)
+void ABasicPlayer::StopSprint()
 {
-
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
 void ABasicPlayer::StartFire()
@@ -153,7 +164,8 @@ void ABasicPlayer::StopFire()
 void ABasicPlayer::OnFire()
 {
 	//발사가 아니면 return
-	if (!bIsFire) {
+	if (!bIsFire)
+	{
 		return;
 	}
 
@@ -206,11 +218,12 @@ void ABasicPlayer::OnFire()
 	//카메라에서 쏘는 이유는 UI의 조준선이 화면 기준으로 되어 있기 때문에 에임을 맞춘다는게 카메라에서 조준섬으로 라인을 쏘는걸로 한다.
 	//맞는다면 총에서 라인을 쏴서 진짜 맞았는지 확인
 	bool Result = UKismetSystemLibrary::LineTraceSingleForObjects(
-		GetWorld(), TraceStart, TraceEnd, Objects, true, ActorToIgnore, EDrawDebugTrace::ForDuration, 
+		GetWorld(), TraceStart, TraceEnd, Objects, true, ActorToIgnore, EDrawDebugTrace::ForDuration,
 		OutHit, true, FLinearColor::Red, FLinearColor::Green, 5.0f);
 
 	//충돌한다면
-	if (Result) {
+	if (Result)
+	{
 		UE_LOG(LogClass, Warning, TEXT("Hit %s"), *OutHit.GetActor()->GetName());
 	}
 }
@@ -229,11 +242,29 @@ void ABasicPlayer::StartCrouch()
 {
 	//이미 엔진에서 만들어 놓은 함수이다.
 	// 앉을 수 있는지 검사해서 앉고 일어서는 걸 수행한다.
-	if (CanCrouch()) {
+	if (CanCrouch())
+	{
 		Crouch();
 	}
-	else {
+	else
+	{
 		UnCrouch();
 	}
+}
+
+void ABasicPlayer::CameraViewChange()
+{
+	CameraChangeSaveRotator = GetControlRotation();
+	bUseControllerRotationYaw = false;
+	IsCameraViewChange = true;
+	SpringArm->TargetArmLength = 300.f;
+}
+
+void ABasicPlayer::StopCameraViewChange()
+{
+	bUseControllerRotationYaw = true;
+	IsCameraViewChange = false;
+	GetController()->SetControlRotation(CameraChangeSaveRotator);
+	SpringArm->TargetArmLength = 120.f;
 }
 
