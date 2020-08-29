@@ -56,6 +56,8 @@ public:
 	void CameraViewChange();
 	void StopCameraViewChange();
 
+	void ReturnCameraRotator(float DeltaTime);
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 		float WalkSpeed = 300.0f;
 
@@ -81,5 +83,6 @@ public:
 	TArray <TEnumAsByte<EObjectTypeQuery>> TestObjects;
 
 	bool IsCameraViewChange = false;
+	bool IsReturnCameraRotator = false;
 	FRotator CameraChangeSaveRotator;
 };

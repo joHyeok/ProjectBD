@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BasicPlayer.h"
@@ -11,6 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "WeaponComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ABasicPlayer::ABasicPlayer()
@@ -27,14 +28,14 @@ ABasicPlayer::ABasicPlayer()
 	Weapon->SetupAttachment(GetMesh(), TEXT("WeaponSocket"));
 
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight()));
-	//ÇÏµåÄÚµù
+	//í•˜ë“œì½”ë”©
 	GetMesh()->SetRelativeRotation(FRotator(0, -90.f, 0));
 
-	//Ä³¸¯ÅÍ ¹«ºê¸ÕÆ®¿¡ NavmovementÀÇ CanCrouch Ã¼Å©ÇÏ±â ÇÏµåÄÚµù
+	//ìºë¦­í„° ë¬´ë¸Œë¨¼íŠ¸ì— Navmovementì˜ CanCrouch ì²´í¬í•˜ê¸° í•˜ë“œì½”ë”©
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
-	SpringArm->SocketOffset = FVector(0, 40.0f, 88.0f);
-	SpringArm->TargetArmLength = 120.f;
+	SpringArm->SocketOffset = FVector(0, 40.0f, 60.0f);
+	SpringArm->TargetArmLength = 250.f;
 	SpringArm->bUsePawnControlRotation = true;
 
 	GetCharacterMovement()->CrouchedHalfHeight = GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
@@ -56,7 +57,7 @@ void ABasicPlayer::BeginPlay()
 void ABasicPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	ReturnCameraRotator(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -89,21 +90,21 @@ void ABasicPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void ABasicPlayer::MoveForward(float AxisValue)
 {
-	//Àı´ë È¸Àü, Ä«¸Ş¶ó °°°Ô ¼³Á¤
+	//ì ˆëŒ€ íšŒì „, ì¹´ë©”ë¼ ê°™ê²Œ ì„¤ì •
 	//GetControlRotation().Vector()
 	FVector CameraLocation;
 	FRotator CameraRotator;
-	//ÄÁÆ®·Ñ·¯°¡ Ä«¸Ş¶óÀÇ Á¤º¸¸¦ °¡Áö°í ÀÖ´Ù. Ä«¸Ş¶óÀÇ À§Ä¡, È¸Àü°ªÀ» ÀúÀåÇÑ´Ù.
+	//ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ì¹´ë©”ë¼ì˜ ì •ë³´ë¥¼ ê°€ì§€ê³  ìˆë‹¤. ì¹´ë©”ë¼ì˜ ìœ„ì¹˜, íšŒì „ê°’ì„ ì €ì¥í•œë‹¤.
 	GetController()->GetPlayerViewPoint(CameraLocation, CameraRotator);
 
-	// Ä³¸¯ÅÍÀÇ ÀÌµ¿À» Ä«¸Ş¶óÀÇ ¹æÇâÀ¸·Î ÀÌµ¿½ÃÅ³°ÇÁö ÄÁÆ®·Ñ·¯ÀÇ ¹æÇâÀ¸·Î ÀÌµ¿½ÃÅ³°ÇÁö
-	// Á¤ÇØ¾ßÇÑ´Ù. ½ºÇÁ¸µ¾ÏÀÌ ÆùÀÇ È¸Àü°ªÀ» °¡Á®¿À´ÂÁö ¾È °¡Á®¿À´ÂÁöµµ ¼³Á¤ÇÔÀ¸·Î¼­
-	// ´Ù¸¥ °á°ú°¡ ³ª¿Â´Ù.
+	// ìºë¦­í„°ì˜ ì´ë™ì„ ì¹´ë©”ë¼ì˜ ë°©í–¥ìœ¼ë¡œ ì´ë™ì‹œí‚¬ê±´ì§€ ì»¨íŠ¸ë¡¤ëŸ¬ì˜ ë°©í–¥ìœ¼ë¡œ ì´ë™ì‹œí‚¬ê±´ì§€
+	// ì •í•´ì•¼í•œë‹¤. ìŠ¤í”„ë§ì•”ì´ í°ì˜ íšŒì „ê°’ì„ ê°€ì ¸ì˜¤ëŠ”ì§€ ì•ˆ ê°€ì ¸ì˜¤ëŠ”ì§€ë„ ì„¤ì •í•¨ìœ¼ë¡œì„œ
+	// ë‹¤ë¥¸ ê²°ê³¼ê°€ ë‚˜ì˜¨ë‹¤.
 
-	//Ä«¸Ş¶óÀÇ ¹æÇâÀ¸·Î ÀÌµ¿ÇÑ´Ù. ½ºÇÁ¸µ¾ÏÀÇ yaw¹æÇâÀ¸·Î¸¸ ÀÌµ¿ÇÑ´Ù.
+	//ì¹´ë©”ë¼ì˜ ë°©í–¥ìœ¼ë¡œ ì´ë™í•œë‹¤. ìŠ¤í”„ë§ì•”ì˜ yawë°©í–¥ìœ¼ë¡œë§Œ ì´ë™í•œë‹¤.
 	//FRotator YawBaseRotation = FRotator(0, CameraRotator.Yaw, 0);
 
-	// ÄÁÆ®·Ñ·¯ÀÇ ¹æÇâÀ¸·Î ÀÌµ¿ÇÑ´Ù.
+	// ì»¨íŠ¸ë¡¤ëŸ¬ì˜ ë°©í–¥ìœ¼ë¡œ ì´ë™í•œë‹¤.
 	FRotator YawBaseRotation = FRotator(0, GetControlRotation().Yaw, 0);
 
 	FVector ResultForward;
@@ -163,7 +164,7 @@ void ABasicPlayer::StopFire()
 
 void ABasicPlayer::OnFire()
 {
-	//¹ß»ç°¡ ¾Æ´Ï¸é return
+	//ë°œì‚¬ê°€ ì•„ë‹ˆë©´ return
 	if (!bIsFire)
 	{
 		return;
@@ -178,50 +179,50 @@ void ABasicPlayer::OnFire()
 	FVector CameraLocation;
 	FRotator CameraRotation;
 
-	//GetViewportSize : ÇÃ·¹ÀÌ¾î°¡ °¡Áø È­¸é »çÀÌÁî
+	//GetViewportSize : í”Œë ˆì´ì–´ê°€ ê°€ì§„ í™”ë©´ ì‚¬ì´ì¦ˆ
 	PC->GetViewportSize(ScreenSizeX, ScreenSizeY);
 
-	//Ä«¸Ş¶ó¸¦ °ü¸®ÇÏ´Â ÇÃ·¹ÀÌ¾î ÄÁÆ®·Ñ·¯°¡ °¡Áö°í ÀÖ´Ù.
-	//ProjectWorldLocationToScreen : ¿ùµåÁÂÇ¥¸¦ È­¸éÁÂÇ¥°è·Î ¹Ù²Û´Ù.
-	//DeprojectScreenPositionToWorld : È­¸é ÁÂÇ¥°è¸¦ ¿ùµå ÁÂÇ¥°è·Î ¹Ù²Û´Ù. ¿£ÁøÀÇ ±â´ÉÀÓ
-	//¾Æ·¡ ÄÚµå´Â È­¸éÀÇ °¡¿îµ¥ ÁöÁ¡À» ¿ùµåÁÂÇ¥·Î °¡Á®¿Â°Å´Ù. È­¸éÀÇ °¡¿îµ¥ Áï ¿¡ÀÓÀÇ À§Ä¡´Ù.
+	//ì¹´ë©”ë¼ë¥¼ ê´€ë¦¬í•˜ëŠ” í”Œë ˆì´ì–´ ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ê°€ì§€ê³  ìˆë‹¤.
+	//ProjectWorldLocationToScreen : ì›”ë“œì¢Œí‘œë¥¼ í™”ë©´ì¢Œí‘œê³„ë¡œ ë°”ê¾¼ë‹¤.
+	//DeprojectScreenPositionToWorld : í™”ë©´ ì¢Œí‘œê³„ë¥¼ ì›”ë“œ ì¢Œí‘œê³„ë¡œ ë°”ê¾¼ë‹¤. ì—”ì§„ì˜ ê¸°ëŠ¥ì„
+	//ì•„ë˜ ì½”ë“œëŠ” í™”ë©´ì˜ ê°€ìš´ë° ì§€ì ì„ ì›”ë“œì¢Œí‘œë¡œ ê°€ì ¸ì˜¨ê±°ë‹¤. í™”ë©´ì˜ ê°€ìš´ë° ì¦‰ ì—ì„ì˜ ìœ„ì¹˜ë‹¤.
 	PC->DeprojectScreenPositionToWorld(ScreenSizeX / 2, ScreenSizeY / 2, CrosshairWorldPosition, CrosshairWorldDirection);
 
-	//Ä«¸Ş¶ó À§Ä¡ °¡Á®¿À±â
+	//ì¹´ë©”ë¼ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°
 	PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
 
-	//¶óÀÎ Æ®·¹ÀÌ½º »ç¿ë
+	//ë¼ì¸ íŠ¸ë ˆì´ìŠ¤ ì‚¬ìš©
 	FVector TraceStart = CameraLocation;
-	//³¡Á¡Àº ½ÃÀÛÁ¡¿¡¼­ Á¶ÁØÁ¡¹æÇâÀ¸·Î Âß ´Ã¸®´Â°Í
+	//ëì ì€ ì‹œì‘ì ì—ì„œ ì¡°ì¤€ì ë°©í–¥ìœ¼ë¡œ ì­‰ ëŠ˜ë¦¬ëŠ”ê²ƒ
 	FVector TraceEnd = TraceStart + (CrosshairWorldDirection * 99999.f);
 
-	//ÇÁÁ§¼¼ÆÃ¿¡ Æ®·¹ÀÌ½º Ã¼³ÎµéÀÇ ¹è¿­°ªÀÌ´Ù. ±× ÀÌ³Ñ°ªÀ» ¹ÙÀÌÆ® ÇüÅÂ·Î ¸¸µç°Í
-	//Ãæµ¹Ã¼Å©ÇÒ ¸®½ºÆ®¸¦ ¸¸µå´Â°Å´Ù.
+	//í”„ì ì„¸íŒ…ì— íŠ¸ë ˆì´ìŠ¤ ì²´ë„ë“¤ì˜ ë°°ì—´ê°’ì´ë‹¤. ê·¸ ì´ë„˜ê°’ì„ ë°”ì´íŠ¸ í˜•íƒœë¡œ ë§Œë“ ê²ƒ
+	//ì¶©ëŒì²´í¬í•  ë¦¬ìŠ¤íŠ¸ë¥¼ ë§Œë“œëŠ”ê±°ë‹¤.
 	TArray <TEnumAsByte<EObjectTypeQuery>> Objects;
 
-	//¼ÕÀ¸·Î ÇÏµåÄÚµùÀº °ÅÀÇ ¾ÈÇÑ´Ù. UPROPERTY()·Î »©¼­ Ä³¸¯ÅÍ ºíÇÁ¿¡¼­ »ç¿ëÇÑ´Ù.
+	//ì†ìœ¼ë¡œ í•˜ë“œì½”ë”©ì€ ê±°ì˜ ì•ˆí•œë‹¤. UPROPERTY()ë¡œ ë¹¼ì„œ ìºë¦­í„° ë¸”í”„ì—ì„œ ì‚¬ìš©í•œë‹¤.
 	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
 	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
 	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
 
-	//°ªÀ» ¾È³Ö¾î¼­ ´Ù ¸Â´Â°É·Î ÇÔ
+	//ê°’ì„ ì•ˆë„£ì–´ì„œ ë‹¤ ë§ëŠ”ê±¸ë¡œ í•¨
 	TArray<AActor*> ActorToIgnore;
 
-	//¸ÂÀº³ğ Á¤º¸ ÀúÀå
-	//¿Â°® Á¤º¸¸¦ °¡Áö°í ÀÖ´Ù.
+	//ë§ì€ë†ˆ ì •ë³´ ì €ì¥
+	//ì˜¨ê°– ì •ë³´ë¥¼ ê°€ì§€ê³  ìˆë‹¤.
 	FHitResult OutHit;
 
-	//Ãæµ¹ÇÏ¸é true¸¦ ¹İÈ¯ÇÔ
-	//¿ùµåÁ¤º¸, ½ÃÀÛ, ³¡, Ãæµ¹ÇÒ ¸®½ºÆ®, ½ºÅ×Æ½¸Ş½ÃÀÇ Ãæµ¹È®ÀÎÀ» false¸é ´Ü¼øÄİ¸®ÀüÀ¸·Î ÇÒ°ÍÀÌ³Ä true¸é º¹ÇÕÄİ¸®ÀüÀ¸·Î ÇÒ°ÍÀÌ³Ä¸¦ ¼³Á¤ÇÑ´Ù, 
-	//¾È¸ÂÀ» ¾Öµé, ±×·ÁÁø Å¸ÀÔ, ¸ÂÀº ³ğ Á¤º¸, ¹«½Ã »çÇ×¿¡ ÆùÀ» »¬°Å³Ä?, ¶óÀÎ»ö, ¸ÂÀº ÈÄ¿¡ »ö, ³ªÅ¸³¯ ½Ã°£
-	//¸¶Áö¸· 3°³´Â º¸Åë ¾È¾´´Ù º¸ÀÏ·Á¸é ¾´´Ù
-	//Ä«¸Ş¶ó¿¡¼­ ½î´Â ÀÌÀ¯´Â UIÀÇ Á¶ÁØ¼±ÀÌ È­¸é ±âÁØÀ¸·Î µÇ¾î ÀÖ±â ¶§¹®¿¡ ¿¡ÀÓÀ» ¸ÂÃá´Ù´Â°Ô Ä«¸Ş¶ó¿¡¼­ Á¶ÁØ¼¶À¸·Î ¶óÀÎÀ» ½î´Â°É·Î ÇÑ´Ù.
-	//¸Â´Â´Ù¸é ÃÑ¿¡¼­ ¶óÀÎÀ» ½÷¼­ ÁøÂ¥ ¸Â¾Ò´ÂÁö È®ÀÎ
+	//ì¶©ëŒí•˜ë©´ trueë¥¼ ë°˜í™˜í•¨
+	//ì›”ë“œì •ë³´, ì‹œì‘, ë, ì¶©ëŒí•  ë¦¬ìŠ¤íŠ¸, ìŠ¤í…Œí‹±ë©”ì‹œì˜ ì¶©ëŒí™•ì¸ì„ falseë©´ ë‹¨ìˆœì½œë¦¬ì „ìœ¼ë¡œ í• ê²ƒì´ëƒ trueë©´ ë³µí•©ì½œë¦¬ì „ìœ¼ë¡œ í• ê²ƒì´ëƒë¥¼ ì„¤ì •í•œë‹¤, 
+	//ì•ˆë§ì„ ì• ë“¤, ê·¸ë ¤ì§„ íƒ€ì…, ë§ì€ ë†ˆ ì •ë³´, ë¬´ì‹œ ì‚¬í•­ì— í°ì„ ëº„ê±°ëƒ?, ë¼ì¸ìƒ‰, ë§ì€ í›„ì— ìƒ‰, ë‚˜íƒ€ë‚  ì‹œê°„
+	//ë§ˆì§€ë§‰ 3ê°œëŠ” ë³´í†µ ì•ˆì“´ë‹¤ ë³´ì¼ë ¤ë©´ ì“´ë‹¤
+	//ì¹´ë©”ë¼ì—ì„œ ì˜ëŠ” ì´ìœ ëŠ” UIì˜ ì¡°ì¤€ì„ ì´ í™”ë©´ ê¸°ì¤€ìœ¼ë¡œ ë˜ì–´ ìˆê¸° ë•Œë¬¸ì— ì—ì„ì„ ë§ì¶˜ë‹¤ëŠ”ê²Œ ì¹´ë©”ë¼ì—ì„œ ì¡°ì¤€ì„¬ìœ¼ë¡œ ë¼ì¸ì„ ì˜ëŠ”ê±¸ë¡œ í•œë‹¤.
+	//ë§ëŠ”ë‹¤ë©´ ì´ì—ì„œ ë¼ì¸ì„ ì´ì„œ ì§„ì§œ ë§ì•˜ëŠ”ì§€ í™•ì¸
 	bool Result = UKismetSystemLibrary::LineTraceSingleForObjects(
 		GetWorld(), TraceStart, TraceEnd, Objects, true, ActorToIgnore, EDrawDebugTrace::ForDuration,
 		OutHit, true, FLinearColor::Red, FLinearColor::Green, 5.0f);
 
-	//Ãæµ¹ÇÑ´Ù¸é
+	//ì¶©ëŒí•œë‹¤ë©´
 	if (Result)
 	{
 		UE_LOG(LogClass, Warning, TEXT("Hit %s"), *OutHit.GetActor()->GetName());
@@ -240,8 +241,8 @@ void ABasicPlayer::StopIronsight()
 
 void ABasicPlayer::StartCrouch()
 {
-	//ÀÌ¹Ì ¿£Áø¿¡¼­ ¸¸µé¾î ³õÀº ÇÔ¼öÀÌ´Ù.
-	// ¾ÉÀ» ¼ö ÀÖ´ÂÁö °Ë»çÇØ¼­ ¾É°í ÀÏ¾î¼­´Â °É ¼öÇàÇÑ´Ù.
+	//ì´ë¯¸ ì—”ì§„ì—ì„œ ë§Œë“¤ì–´ ë†“ì€ í•¨ìˆ˜ì´ë‹¤.
+	// ì•‰ì„ ìˆ˜ ìˆëŠ”ì§€ ê²€ì‚¬í•´ì„œ ì•‰ê³  ì¼ì–´ì„œëŠ” ê±¸ ìˆ˜í–‰í•œë‹¤.
 	if (CanCrouch())
 	{
 		Crouch();
@@ -255,16 +256,30 @@ void ABasicPlayer::StartCrouch()
 void ABasicPlayer::CameraViewChange()
 {
 	CameraChangeSaveRotator = GetControlRotation();
+	UE_LOG(LogClass, Warning, TEXT("ë‹¤ì‹œ ëŒì•„ê°ˆ ì»¨íŠ¸ë¡¤ëŸ¬ì˜ ìœ„ì¹˜ëŠ” %s"), *CameraChangeSaveRotator.ToString());
 	bUseControllerRotationYaw = false;
 	IsCameraViewChange = true;
-	SpringArm->TargetArmLength = 300.f;
+	//SpringArm->TargetArmLength = 300.f;
 }
 
 void ABasicPlayer::StopCameraViewChange()
 {
 	bUseControllerRotationYaw = true;
 	IsCameraViewChange = false;
-	GetController()->SetControlRotation(CameraChangeSaveRotator);
-	SpringArm->TargetArmLength = 120.f;
+	IsReturnCameraRotator = true;
+	//SpringArm->TargetArmLength = 120.f;
+}
+
+void ABasicPlayer::ReturnCameraRotator(float DeltaTime)
+{
+	if (IsCameraViewChange) return;
+	if (!IsReturnCameraRotator) return;
+	FRotator ReturnCamera = FMath::RInterpTo(GetControlRotation(), CameraChangeSaveRotator, DeltaTime, 10.f);
+	GetController()->SetControlRotation(ReturnCamera);
+	
+	UE_LOG(LogClass, Warning, TEXT("ë‹¤ì‹œ ëŒì•„ê°ˆ ì»¨íŠ¸ë¡¤ëŸ¬ì˜ ìœ„ì¹˜ëŠ” %s"), *CameraChangeSaveRotator.ToString());
+	UE_LOG(LogClass, Warning, TEXT("í˜„ì¬ ì»¨íŠ¸ë¡¤ëŸ¬ ìœ„ì¹˜ëŠ” %s"), *GetControlRotation().ToString());
+	UE_LOG(LogClass, Warning, TEXT("%s"), *(GetControlRotation() - CameraChangeSaveRotator).ToString());
+	if ((GetControlRotation() - CameraChangeSaveRotator).IsNearlyZero(0.1f)) IsReturnCameraRotator = false;
 }
 
