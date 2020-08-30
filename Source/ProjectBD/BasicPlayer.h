@@ -82,7 +82,12 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray <TEnumAsByte<EObjectTypeQuery>> TestObjects;
 
+	//카메라 뷰 변환을 하고 있는지 : Alt키를 눌렀는지
 	bool IsCameraViewChange = false;
+
+	//카메라 뷰를 원상태로 되돌리고 있는지 : Alt키를 땠는지
 	bool IsReturnCameraRotator = false;
+
+	//카메라 뷰의 원래 지점
 	FRotator CameraChangeSaveRotator;
 };

@@ -133,11 +133,17 @@ void ABasicPlayer::MoveRight(float AxisValue)
 
 void ABasicPlayer::LookUp(float AxisValue)
 {
+	//카메라 뷰 변환을 원상복귀 시킬때는 마우스 입력이 없다
+	//알트키를 때서 원상태로 돌아갈때 화면을 움직일 수 없다.
+	if (IsReturnCameraRotator) return;
 	AddControllerPitchInput(AxisValue);
 }
 
 void ABasicPlayer::Turn(float AxisValue)
 {
+	//카메라 뷰 변환을 원상복귀 시킬때는 마우스 입력이 없다
+	//알트키를 때서 원상태로 돌아갈때 화면을 움직일 수 없다.
+	if (IsReturnCameraRotator) return;
 	AddControllerYawInput(AxisValue);
 }
 
@@ -255,8 +261,8 @@ void ABasicPlayer::StartCrouch()
 
 void ABasicPlayer::CameraViewChange()
 {
-	CameraChangeSaveRotator = GetControlRotation();
-	UE_LOG(LogClass, Warning, TEXT("다시 돌아갈 컨트롤러의 위치는 %s"), *CameraChangeSaveRotator.ToString());
+	//Clamp() : 각도를 0에서 360으로 맞춘다. 마이너스 단위를 없앰
+	CameraChangeSaveRotator = GetControlRotation().Clamp();
 	bUseControllerRotationYaw = false;
 	IsCameraViewChange = true;
 	//SpringArm->TargetArmLength = 300.f;
@@ -274,12 +280,14 @@ void ABasicPlayer::ReturnCameraRotator(float DeltaTime)
 {
 	if (IsCameraViewChange) return;
 	if (!IsReturnCameraRotator) return;
-	FRotator ReturnCamera = FMath::RInterpTo(GetControlRotation(), CameraChangeSaveRotator, DeltaTime, 10.f);
+	FRotator ReturnCamera = FMath::RInterpTo(GetControlRotation().Clamp(), CameraChangeSaveRotator, DeltaTime, 30.f);
 	GetController()->SetControlRotation(ReturnCamera);
 	
-	UE_LOG(LogClass, Warning, TEXT("다시 돌아갈 컨트롤러의 위치는 %s"), *CameraChangeSaveRotator.ToString());
-	UE_LOG(LogClass, Warning, TEXT("현재 컨트롤러 위치는 %s"), *GetControlRotation().ToString());
-	UE_LOG(LogClass, Warning, TEXT("%s"), *(GetControlRotation() - CameraChangeSaveRotator).ToString());
-	if ((GetControlRotation() - CameraChangeSaveRotator).IsNearlyZero(0.1f)) IsReturnCameraRotator = false;
+	//0.1의 오차로 두 값이 동일하다면 해제
+	if (GetControlRotation().Clamp().Equals(CameraChangeSaveRotator, 0.1))
+	{
+		IsReturnCameraRotator = false;
+		UE_LOG(LogClass, Warning, TEXT("값이 같습니다. %s 와 %s"), *GetControlRotation().Clamp().ToString(), *CameraChangeSaveRotator.ToString());
+	}
 }
 
