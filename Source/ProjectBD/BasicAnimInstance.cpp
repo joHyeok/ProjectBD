@@ -12,10 +12,8 @@ void UBasicAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (Pawn && Pawn->IsValidLowLevel()) {
 		//방향을 계산한다.
 		
-		Direction = CalculateDirection(TryGetPawnOwner()->GetVelocity(), TryGetPawnOwner()->GetActorRotation());
-		//Direction = CalculateDirection(Pawn->GetController()->GetVelocity(), Pawn->GetActorRotation());
+		Direction = CalculateDirection(Pawn->GetCharacterMovement()->Velocity, Pawn->GetActorRotation());
 		//UE_LOG(LogClass, Warning, TEXT("Direction : %f"), Direction);
-
 
 		//크기만 알아도된다면 SizeSquared()를 사용하자.
 		Speed = Pawn->GetCharacterMovement()->Velocity.Size();

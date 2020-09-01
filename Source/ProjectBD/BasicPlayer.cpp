@@ -58,6 +58,7 @@ void ABasicPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	ReturnCameraRotator(DeltaTime);
+	
 }
 
 // Called to bind functionality to input
