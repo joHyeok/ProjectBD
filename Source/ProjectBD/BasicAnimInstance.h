@@ -15,12 +15,14 @@ class PROJECTBD_API UBasicAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 
 public:
+
+
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Status")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
 		float Speed;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Status")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
 		float Direction;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
