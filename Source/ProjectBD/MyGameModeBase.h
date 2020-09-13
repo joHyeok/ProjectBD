@@ -13,5 +13,11 @@ UCLASS()
 class PROJECTBD_API AMyGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+
+public:
+	AMyGameModeBase();
 	
+	void CheckGameRule();
+
+	float PlayerHealth;
 };

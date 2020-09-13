@@ -23,4 +23,15 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class USphereComponent* Sphere;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UStaticMeshComponent* Body;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UProjectileMovementComponent* Movement;
+
+	UFUNCTION()
+	void ProcessBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 };

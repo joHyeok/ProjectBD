@@ -35,6 +35,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 		class UWeaponComponent* Weapon;
 
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+		class USceneComponent* BulletSpot;
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void SpawnBullet();
+
 	void MoveForward(float AxisValue);
 	void MoveRight(float AxisValue);
 	void LookUp(float AxisValue);
@@ -48,6 +54,8 @@ public:
 
 	void OnFire();
 
+	
+
 	void StartIronsight();
 	void StopIronsight();
 
@@ -58,11 +66,16 @@ public:
 
 	void ReturnCameraRotator(float DeltaTime);
 
+	float GetPlayerHP();
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 		float WalkSpeed = 300.0f;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 		float SprintSpeed = 600.0f;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+		float PlayerHP = 100.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 		uint64 bIsFire : 1;

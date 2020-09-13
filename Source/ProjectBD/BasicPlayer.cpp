@@ -7,11 +7,13 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/SceneComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "WeaponComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "BasicBullet.h"
 
 // Sets default values
 ABasicPlayer::ABasicPlayer()
@@ -22,10 +24,12 @@ ABasicPlayer::ABasicPlayer()
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Weapon = CreateDefaultSubobject<UWeaponComponent>(TEXT("Weapon"));
+	BulletSpot = CreateDefaultSubobject<USceneComponent>(TEXT("BulletSpot"));
 
 	SpringArm->SetupAttachment(RootComponent);
 	Camera->SetupAttachment(SpringArm);
 	Weapon->SetupAttachment(GetMesh(), TEXT("WeaponSocket"));
+	BulletSpot->SetupAttachment(Weapon);
 
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight()));
 	//하드코딩
@@ -43,7 +47,14 @@ ABasicPlayer::ABasicPlayer()
 	NormalSpringArmPosition = SpringArm->GetRelativeLocation();
 	CrouchedSpringArmPosition = NormalSpringArmPosition + FVector(0, 0, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() / 2);
 
-	
+	BulletSpot->SetRelativeLocationAndRotation(FVector(0, 60.f, 10.5f), FRotator(0, 90.f, 0));
+
+	Tags.Add(TEXT("Player"));
+
+	UE_LOG(LogClass, Warning, TEXT("Player Spawn"));
+	TArray<AActor*> Output;
+	UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ABasicPlayer::StaticClass(), TEXT("Player"), Output);
+	UE_LOG(LogClass, Warning, TEXT("Player Output Num : %d"), Output.Num());
 }
 
 // Called when the game starts or when spawned
@@ -162,6 +173,7 @@ void ABasicPlayer::StartFire()
 {
 	bIsFire = true;
 	OnFire();
+	SpawnBullet();
 }
 
 void ABasicPlayer::StopFire()
@@ -290,5 +302,10 @@ void ABasicPlayer::ReturnCameraRotator(float DeltaTime)
 		IsReturnCameraRotator = false;
 		UE_LOG(LogClass, Warning, TEXT("값이 같습니다. %s 와 %s"), *GetControlRotation().Clamp().ToString(), *CameraChangeSaveRotator.ToString());
 	}
+}
+
+float ABasicPlayer::GetPlayerHP()
+{
+	return PlayerHP;
 }
 
