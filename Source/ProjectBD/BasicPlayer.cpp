@@ -238,7 +238,7 @@ void ABasicPlayer::OnFire()
 	//카메라에서 쏘는 이유는 UI의 조준선이 화면 기준으로 되어 있기 때문에 에임을 맞춘다는게 카메라에서 조준섬으로 라인을 쏘는걸로 한다.
 	//맞는다면 총에서 라인을 쏴서 진짜 맞았는지 확인
 	bool Result = UKismetSystemLibrary::LineTraceSingleForObjects(
-		GetWorld(), TraceStart, TraceEnd, Objects, true, ActorToIgnore, EDrawDebugTrace::ForDuration,
+		GetWorld(), TraceStart, TraceEnd, Objects, true, ActorToIgnore, EDrawDebugTrace::None,
 		OutHit, true, FLinearColor::Red, FLinearColor::Green, 5.0f);
 
 	//충돌한다면

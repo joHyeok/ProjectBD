@@ -51,8 +51,8 @@ void ABasicBullet::ProcessBeginOverlap(AActor* OverlappedActor, AActor* OtherAct
 	{
 		OtherActor->Destroy();
 
-		AMyGameModeBase* GameMode = Cast<AMyGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-		GameMode->CheckGameRule();
+		//AMyGameModeBase* GameMode = Cast<AMyGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+		//GameMode->CheckGameRule();
 	}
 	
 }
